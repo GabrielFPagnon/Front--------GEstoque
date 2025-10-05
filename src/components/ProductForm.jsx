@@ -2,12 +2,11 @@ import { useState } from "react";
 
 function ProductForm({ onSave }) {
   const [form, setForm] = useState({
-    id: "",
     nome: "",
-    descricao: "",
-    estoque: 0,
-    valor: 0,
-    dataEntrada: "",
+    codigo: "",
+    quantidade: 0,
+    preco: 0,
+    categoria: "",
   });
 
   const handleChange = (e) => {
@@ -17,98 +16,111 @@ function ProductForm({ onSave }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(form);
-    setForm({
-      id: "",
-      nome: "",
-      descricao: "",
-      estoque: 0,
-      valor: 0,
-      dataEntrada: "",
-    });
+    const newProduct = {
+        ...form,
+        id: Math.random().toString(36).substring(2, 9).toUpperCase(),
+        valor: form.preco, // Ajuste para consistência
+        estoque: form.quantidade, // Ajuste para consistência
+        descricao: form.nome + " " + form.categoria, // Descrição simples
+        dataEntrada: new Date().toLocaleDateString('pt-BR'),
+    }
+    
+    onSave(newProduct);
+    setForm({ nome: "", codigo: "", quantidade: 0, preco: 0, categoria: "" });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border rounded w-96">
-      <h2 className="text-xl font-bold mb-4">Cadastrar Produto</h2>
+    <form 
+        onSubmit={handleSubmit} 
+        className="p-6 bg-white shadow-lg rounded-xl w-full max-w-md mx-auto space-y-4 border border-gray-100"
+    >
+        <h2 className="text-2xl font-semibold text-center text-gray-700">Adicionar Novo Produto</h2>
 
-      <label className="block mb-2">
-        ID:
-        <input
-          type="text"
-          name="id"
-          value={form.id}
-          onChange={handleChange}
-          className="w-full border p-1 rounded"
-          required
-        />
-      </label>
+        {/* Nome */}
+        <div className="space-y-1">
+            <label htmlFor="nome" className="block text-sm font-medium text-gray-700">Nome do Produto</label>
+            <input
+                id="nome"
+                name="nome"
+                type="text"
+                value={form.nome}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            />
+        </div>
+        
+        {/* Código */}
+        <div className="space-y-1">
+            <label htmlFor="codigo" className="block text-sm font-medium text-gray-700">Código</label>
+            <input
+                id="codigo"
+                name="codigo"
+                type="text"
+                value={form.codigo}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            />
+        </div>
 
-      <label className="block mb-2">
-        Nome:
-        <input
-          type="text"
-          name="nome"
-          value={form.nome}
-          onChange={handleChange}
-          className="w-full border p-1 rounded"
-          required
-        />
-      </label>
+        {/* Quantidade e Preço em uma linha */}
+        <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+                <label htmlFor="quantidade" className="block text-sm font-medium text-gray-700">Estoque</label>
+                <input
+                    id="quantidade"
+                    name="quantidade"
+                    type="number"
+                    value={form.quantidade}
+                    onChange={handleChange}
+                    required
+                    min="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                />
+            </div>
 
-      <label className="block mb-2">
-        Descrição:
-        <textarea
-          name="descricao"
-          value={form.descricao}
-          onChange={handleChange}
-          className="w-full border p-1 rounded"
-        />
-      </label>
+            <div className="space-y-1">
+                <label htmlFor="preco" className="block text-sm font-medium text-gray-700">Preço (R$)</label>
+                <input
+                    id="preco"
+                    name="preco"
+                    type="number"
+                    value={form.preco}
+                    onChange={handleChange}
+                    required
+                    min="0"
+                    step="0.01"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                />
+            </div>
+        </div>
 
-      <label className="block mb-2">
-        Estoque:
-        <input
-          type="number"
-          name="estoque"
-          value={form.estoque}
-          onChange={handleChange}
-          className="w-full border p-1 rounded"
-          required
-        />
-      </label>
+        {/* Categoria */}
+        <div className="space-y-1">
+            <label htmlFor="categoria" className="block text-sm font-medium text-gray-700">Categoria</label>
+            <select
+                id="categoria"
+                name="categoria"
+                value={form.categoria}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white"
+            >
+                <option value="">Selecione...</option>
+                <option value="Eletronicos">Eletrônicos</option>
+                <option value="Vestuario">Vestuário</option>
+                <option value="Alimentos">Alimentos</option>
+                <option value="Limpeza">Limpeza</option>
+            </select>
+        </div>
 
-      <label className="block mb-2">
-        Valor:
-        <input
-          type="number"
-          step="0.01"
-          name="valor"
-          value={form.valor}
-          onChange={handleChange}
-          className="w-full border p-1 rounded"
-          required
-        />
-      </label>
-
-      <label className="block mb-2">
-        Data de Entrada:
-        <input
-          type="date"
-          name="dataEntrada"
-          value={form.dataEntrada}
-          onChange={handleChange}
-          className="w-full border p-1 rounded"
-          required
-        />
-      </label>
-
-      <button
-        type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded mt-2"
-      >
-        Salvar
-      </button>
+        <button 
+            type="submit" 
+            className="w-full py-2 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150"
+        >
+            Salvar Produto
+        </button>
     </form>
   );
 }
