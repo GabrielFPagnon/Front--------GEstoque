@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
 
-// ===============================================
-// 1. Componente ProductForm (Formulário de Cadastro)
-// ===============================================
-
 function ProductForm({ onSave }) {
     const [form, setForm] = useState({
         nome: "",
@@ -21,12 +17,11 @@ function ProductForm({ onSave }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         
-        // Simula a adição de dados extras para exibição na lista
         const newProduct = {
             ...form,
             id: Math.random().toString(36).substring(2, 9).toUpperCase(),
-            valor: parseFloat(form.preco), // Garante que o valor seja um número
-            estoque: parseInt(form.quantidade), // Garante que a quantidade seja um número inteiro
+            valor: parseFloat(form.preco), 
+            estoque: parseInt(form.quantidade), 
             descricao: form.nome + " / " + form.categoria,
             dataEntrada: new Date().toLocaleDateString('pt-BR'),
         }
@@ -131,12 +126,6 @@ function ProductForm({ onSave }) {
     );
 }
 
-// ===============================================
-// 2. Componentes de Login (Revisados)
-// ===============================================
-
-// Removido LoginHeader (não usado) para simplificar.
-
 function LoginForm({ onLogin }) {
   const [employeeCode, setEmployeeCode] = useState('');
   const [employeeName, setEmployeeName] = useState('');
@@ -147,9 +136,9 @@ function LoginForm({ onLogin }) {
     e.preventDefault();
     setError('');
     
-    // Lógica de Autenticação MOCK
+   
     if (employeeCode && employeeName && password) {
-        onLogin(true); // Sucesso
+        onLogin(true);
     } else {
         setError('Por favor, preencha todos os campos.');
     }
@@ -226,29 +215,24 @@ function LoginContainer({ onLogin }) {
 }
 
 
-// ===============================================
-// 3. Componente Principal - App
-// ===============================================
-
 function App() {
   const [produtos, setProdutos] = useState([]);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Novo estado de autenticação (mantenha false para testar o login)
+  const [isLoggedIn, setIsLoggedIn] = useState(false); 
 
   const adicionarProduto = (produto) => {
-    setProdutos([produto, ...produtos]); // Adiciona o novo produto no topo da lista
+    setProdutos([produto, ...produtos]); 
   };
   
   const handleLogout = () => {
     setIsLoggedIn(false);
-    setProdutos([]); // Limpa os produtos ao deslogar
+    setProdutos([]);
   }
   
-  // Renderiza a tela de Login se o usuário não estiver logado
+  
   if (!isLoggedIn) {
       return <LoginContainer onLogin={setIsLoggedIn} />;
   }
 
-  // Renderiza o Dashboard de Gestão de Produtos se o usuário estiver logado
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       
