@@ -3,45 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestão de Estoque</title>
-    <!-- Carregamento do Tailwind CSS via CDN para garantir a estilização correta -->
+    <title>Treko</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Configuração do Tailwind para usar a cor verde primária -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'primary-green': '#41853C', // Seu verde principal
+                        'primary-green': '#41853C', 
                     },
                 }
             }
         }
     </script>
-    <!-- Carregamento do React e Babel -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Fonte Inter (Boa prática de design) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Fundo levemente cinza */
+            background-color: #f3f4f6; 
         }
     </style>
 </head>
 <body>
     <div id="root">
-        <!-- O conteúdo React será renderizado aqui -->
     </div>
 
     <script type="text/babel">
         const { useState } = React;
-
-        // ===============================================
-        // 1. Componente ProductForm (Formulário de Cadastro)
-        // ===============================================
 
         function ProductForm({ onSave }) {
             const [form, setForm] = useState({
@@ -60,7 +51,6 @@
             const handleSubmit = (e) => {
                 e.preventDefault();
                 
-                // Simula a adição de dados extras para exibição na lista
                 const newProduct = {
                     ...form,
                     id: Math.random().toString(36).substring(2, 9).toUpperCase(),
@@ -170,9 +160,6 @@
             );
         }
 
-        // ===============================================
-        // 2. Componentes de Login
-        // ===============================================
 
         function LoginForm({ onLogin }) {
             const [employeeCode, setEmployeeCode] = useState('');
@@ -184,9 +171,8 @@
                 e.preventDefault();
                 setError('');
                 
-                // Lógica de Autenticação MOCK
                 if (employeeCode && employeeName && password) {
-                    onLogin(true); // Sucesso
+                    onLogin(true); 
                 } else {
                     setError('Por favor, preencha todos os campos.');
                 }
@@ -197,12 +183,14 @@
             return (
                 <form className="p-6 space-y-5" onSubmit={handleSubmit}>
                     
-                    {/* Logo Placeholder */}
-                    <div className="text-center pb-2">
-                        <div className="w-20 h-20 mx-auto bg-gray-200 rounded-full flex items-center justify-center mb-2">
-                            <span className="text-2xl text-gray-600">LOGO</span>
-                        </div>
-                        <p className="text-sm text-gray-500">Insira a imagem da sua logo aqui.</p>
+                    {/* Placeholder */}
+                    <div className="text-center pb-4">
+                        <img 
+                            src="" 
+                            alt="Logo do Sistema de Estoque"
+                            className="w-20 h-20 mx-auto object-cover rounded-full shadow-lg border-2 border-primary-green p-1"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">Cole aqui a URL da sua logo PNG.</p>
                     </div>
                     
                     {/* Campos de Input */}
@@ -260,11 +248,6 @@
             );
         }
 
-
-        // ===============================================
-        // 3. Componente Principal - App
-        // ===============================================
-
         function App() {
             const [produtos, setProdutos] = useState([]);
             const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -278,12 +261,10 @@
                 setProdutos([]);
             }
             
-            // Renderiza a tela de Login se o usuário não estiver logado
             if (!isLoggedIn) {
                 return <LoginContainer onLogin={setIsLoggedIn} />;
             }
 
-            // Renderiza o Dashboard de Gestão de Produtos se o usuário estiver logado
             return (
                 <div className="flex flex-col min-h-screen bg-gray-50">
                     
@@ -341,7 +322,6 @@
             );
         }
 
-        // Renderização do App no elemento 'root'
         const rootElement = document.getElementById('root');
         ReactDOM.createRoot(rootElement).render(<App />);
     </script>
