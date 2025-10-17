@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { apiFetch, BASE } from './api';
 
-const API_URL = 'http://localhost:3000/api/login'; 
+const API_URL = `${BASE}/api/login`;
 
 
 function ProductForm({ onSave }) {
@@ -12,6 +13,8 @@ function ProductForm({ onSave }) {
         preco: 0,
         categoria: "",
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -21,18 +24,32 @@ function ProductForm({ onSave }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        
-        const newProduct = {
-            ...form,
-            id: Math.random().toString(36).substring(2, 9).toUpperCase(),
-            valor: parseFloat(form.preco), 
-            estoque: parseInt(form.quantidade), 
-            descricao: form.nome + " / " + form.categoria,
-            dataEntrada: new Date().toLocaleDateString('pt-BR'),
-        }
-        
-        onSave(newProduct); 
-        setForm({ nome: "", codigo: "", quantidade: 0, preco: 0, categoria: "" }); 
+        setErrorMsg('');
+        setIsSubmitting(true);
+
+        (async () => {
+            const payload = {
+                ...form,
+                valor: parseFloat(form.preco),
+                estoque: parseInt(form.quantidade, 10),
+                descricao: form.nome + ' / ' + form.categoria,
+                dataEntrada: new Date().toLocaleDateString('pt-BR'),
+            };
+
+            try {
+                // tenta criar no servidor
+                const created = await apiFetch('/api/products', { method: 'POST', body: payload });
+                // se o servidor retornar o recurso criado, usa ele; senão usa o payload com id gerado
+                const productToAdd = created && created.id ? created : { ...payload, id: Math.random().toString(36).substring(2, 9).toUpperCase() };
+                onSave(productToAdd);
+                setForm({ nome: "", codigo: "", quantidade: 0, preco: 0, categoria: "" });
+            } catch (err) {
+                console.error('Erro ao criar produto:', err);
+                setErrorMsg(err?.data?.message || err.message || 'Falha ao salvar produto no servidor.');
+            } finally {
+                setIsSubmitting(false);
+            }
+        })();
     };
 
     return (
@@ -120,9 +137,11 @@ function ProductForm({ onSave }) {
             <button 
                 type="submit" 
                 className="w-full py-2 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150"
+                disabled={isSubmitting}
             >
-                Salvar Produto
+                {isSubmitting ? 'Salvando...' : 'Salvar Produto'}
             </button>
+            {errorMsg && <p className="text-red-500 text-sm text-center">{errorMsg}</p>}
         </form>
     );
 }
@@ -132,7 +151,7 @@ function LoginForm({ onLogin }) {
     const [nome, setNome] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false); // Novo estado para loading
+    const [isLoading, setIsLoading] = useState(false); 
 
     const primaryGreen = '#41853C'; 
 
@@ -239,6 +258,7 @@ function LoginContainer({ onLogin }) {
 function App() {
     const [produtos, setProdutos] = useState([]);
     const [isLoggedIn, setIsLoggedIn] = useState(false); 
+    const [loadingProducts, setLoadingProducts] = useState(false);
 
     const adicionarProduto = (produto) => {
         setProdutos([produto, ...produtos]); 
@@ -248,6 +268,23 @@ function App() {
         setIsLoggedIn(false);
         setProdutos([]);
     }
+    
+    useEffect(() => {
+        // busca produtos iniciais do backend (se houver)
+        const fetchProducts = async () => {
+            setLoadingProducts(true);
+            try {
+                const data = await apiFetch('/api/products');
+                if (Array.isArray(data)) setProdutos(data);
+            } catch (err) {
+                console.warn('Não foi possível carregar produtos do servidor:', err.message || err);
+            } finally {
+                setLoadingProducts(false);
+            }
+        };
+
+        if (isLoggedIn) fetchProducts();
+    }, [isLoggedIn]);
     
     
     if (!isLoggedIn) {
