@@ -1,150 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { apiFetch, BASE } from './api';
+import ProductForm from './components/ProductForm';
 
 const API_URL = `${BASE}/api/login`;
-
-
-function ProductForm({ onSave }) {
-    const [form, setForm] = useState({
-        nome: "",
-        codigo: "",
-        quantidade: 0,
-        preco: 0,
-        categoria: "",
-    });
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [errorMsg, setErrorMsg] = useState('');
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        const newValue = (name === 'quantidade' || name === 'preco') ? (value === "" ? "" : Number(value)) : value;
-        setForm({ ...form, [name]: newValue });
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        setErrorMsg('');
-        setIsSubmitting(true);
-
-        (async () => {
-            const payload = {
-                ...form,
-                valor: parseFloat(form.preco),
-                estoque: parseInt(form.quantidade, 10),
-                descricao: form.nome + ' / ' + form.categoria,
-                dataEntrada: new Date().toLocaleDateString('pt-BR'),
-            };
-
-            try {
-                // tenta criar no servidor
-                const created = await apiFetch('/api/products', { method: 'POST', body: payload });
-                // se o servidor retornar o recurso criado, usa ele; senão usa o payload com id gerado
-                const productToAdd = created && created.id ? created : { ...payload, id: Math.random().toString(36).substring(2, 9).toUpperCase() };
-                onSave(productToAdd);
-                setForm({ nome: "", codigo: "", quantidade: 0, preco: 0, categoria: "" });
-            } catch (err) {
-                console.error('Erro ao criar produto:', err);
-                setErrorMsg(err?.data?.message || err.message || 'Falha ao salvar produto no servidor.');
-            } finally {
-                setIsSubmitting(false);
-            }
-        })();
-    };
-
-    return (
-        <form 
-            onSubmit={handleSubmit} 
-            className="p-6 bg-white shadow-lg rounded-xl w-full max-w-md mx-auto space-y-4 border border-gray-100"
-        >
-            <h2 className="text-2xl font-semibold text-center text-gray-700">Adicionar Novo Produto</h2>
-
-            <div className="space-y-1">
-                <label htmlFor="nome" className="block text-sm font-medium text-gray-700">Nome do Produto</label>
-                <input
-                    id="nome"
-                    name="nome"
-                    type="text"
-                    value={form.nome}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                />
-            </div>
-            
-            <div className="space-y-1">
-                <label htmlFor="codigo" className="block text-sm font-medium text-gray-700">Código</label>
-                <input
-                    id="codigo"
-                    name="codigo"
-                    type="text"
-                    value={form.codigo}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                    <label htmlFor="quantidade" className="block text-sm font-medium text-gray-700">Estoque</label>
-                    <input
-                        id="quantidade"
-                        name="quantidade"
-                        type="number"
-                        value={form.quantidade}
-                        onChange={handleChange}
-                        required
-                        min="0"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    />
-                </div>
-
-                <div className="space-y-1">
-                    <label htmlFor="preco" className="block text-sm font-medium text-gray-700">Preço (R$)</label>
-                    <input
-                        id="preco"
-                        name="preco"
-                        type="number"
-                        value={form.preco}
-                        onChange={handleChange}
-                        required
-                        min="0"
-                        step="0.01"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    />
-                </div>
-            </div>
-
-            <div className="space-y-1">
-                <label htmlFor="categoria" className="block text-sm font-medium text-gray-700">Categoria</label>
-                <select
-                    id="categoria"
-                    name="categoria"
-                    value={form.categoria}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white"
-                >
-                    <option value="">Selecione...</option>
-                    <option value="Eletronicos">Eletrônicos</option>
-                    <option value="Vestuario">Vestuário</option>
-                    <option value="Alimentos">Alimentos</option>
-                    <option value="Limpeza">Limpeza</option>
-                </select>
-            </div>
-
-            <button 
-                type="submit" 
-                className="w-full py-2 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150"
-                disabled={isSubmitting}
-            >
-                {isSubmitting ? 'Salvando...' : 'Salvar Produto'}
-            </button>
-            {errorMsg && <p className="text-red-500 text-sm text-center">{errorMsg}</p>}
-        </form>
-    );
-}
 
 function LoginForm({ onLogin }) {
     const [codigo, setCodigo] = useState('');
@@ -259,6 +118,7 @@ function App() {
     const [produtos, setProdutos] = useState([]);
     const [isLoggedIn, setIsLoggedIn] = useState(false); 
     const [loadingProducts, setLoadingProducts] = useState(false);
+    const [submitToServer, setSubmitToServer] = useState(false);
 
     const adicionarProduto = (produto) => {
         setProdutos([produto, ...produtos]); 
@@ -270,7 +130,6 @@ function App() {
     }
     
     useEffect(() => {
-        // busca produtos iniciais do backend (se houver)
         const fetchProducts = async () => {
             setLoadingProducts(true);
             try {
@@ -307,7 +166,17 @@ function App() {
             <main className="flex flex-col md:flex-row gap-8 p-6 flex-grow max-w-7xl w-full mx-auto">
                 
                 <div className="w-full md:w-1/3">
-                    <ProductForm onSave={adicionarProduto} />
+                    <div className="mb-4 flex items-center justify-between">
+                        <label className="text-sm text-gray-600">Enviar ao servidor:</label>
+                        <button
+                            onClick={() => setSubmitToServer((s) => !s)}
+                            className={`px-3 py-1 rounded ${submitToServer ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+                            type="button"
+                        >
+                            {submitToServer ? 'Ativo' : 'Inativo'}
+                        </button>
+                    </div>
+                    <ProductForm onSave={adicionarProduto} submitToServer={submitToServer} />
                 </div>
 
                 <div className="w-full md:w-2/3 bg-white p-6 shadow-xl rounded-xl">

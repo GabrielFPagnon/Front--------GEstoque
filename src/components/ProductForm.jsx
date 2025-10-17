@@ -1,33 +1,46 @@
 import { useState } from "react";
+import { apiFetch } from "../api";
 
-function ProductForm({ onSave }) {
-  const [form, setForm] = useState({
-    nome: "",
-    codigo: "",
-    quantidade: 0,
-    preco: 0,
-    categoria: "",
-  });
+
+function ProductForm({ onSave, initialValues = null, submitToServer = false }) {
+    const [form, setForm] = useState(initialValues || {
+        nome: "",
+        codigo: "",
+        quantidade: 0,
+        preco: 0,
+        categoria: "",
+    });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const newProduct = {
-        ...form,
-        id: Math.random().toString(36).substring(2, 9).toUpperCase(),
-        valor: form.preco, // Ajuste para consistência
-        estoque: form.quantidade, // Ajuste para consistência
-        descricao: form.nome + " " + form.categoria, // Descrição simples
-        dataEntrada: new Date().toLocaleDateString('pt-BR'),
-    }
-    
-    onSave(newProduct);
-    setForm({ nome: "", codigo: "", quantidade: 0, preco: 0, categoria: "" });
-  };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const baseProduct = {
+            ...form,
+            valor: Number(form.preco) || 0,
+            estoque: Number(form.quantidade) || 0,
+            descricao: String(form.nome || "") + " " + String(form.categoria || ""),
+            dataEntrada: new Date().toLocaleDateString('pt-BR'),
+        };
+
+        let productToAdd = { ...baseProduct, id: Math.random().toString(36).substring(2, 9).toUpperCase() };
+
+        if (submitToServer) {
+            try {
+                const created = await apiFetch('/api/products', { method: 'POST', body: baseProduct });
+                if (created && created.id) productToAdd = created;
+            } catch (err) {
+                console.error('Falha ao enviar produto ao servidor:', err);
+            }
+        }
+
+        onSave(productToAdd);
+        setForm({ nome: "", codigo: "", quantidade: 0, preco: 0, categoria: "" });
+    };
 
   return (
     <form 
